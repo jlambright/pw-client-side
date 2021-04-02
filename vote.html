@@ -1,32 +1,64 @@
 <script type="application/javascript">
     const storyId = "STORY_ID_FROM_WEBFLOW_CMS";
+    const getRoundMap = (idToken) => {
+        const headers = new Headers();
+        headers.append("Accept", "application/json");
+        headers.append("Authorization", `Bearer ${idToken}`);
+
+        const options = {
+            headers: headers,
+            method: "GET",
+            cache: "default"
+        }
+        return fetch(`https://api.purplewallstories.com/round`, options)
+    }
     const upVote = () => {
-        const currentUser = firebase.auth().currentUser;
-        if (currentUser) {
-            return getIdToken().then((idToken) => {
-                const params = {
-                    headers: {
-                        'Authorization': `Bearer ${idToken}`,
-                        "content-type": "application/json; charset=UTF-8"
-                    },
+        return getIdToken().then((idToken) => {
+            if (idToken) {
+                const headers = new Headers();
+                headers.append("Accept", "application/json");
+                headers.append("Authorization", `Bearer ${idToken}`);
+
+                const options = {
+                    headers: headers,
                     method: "POST"
                 }
-                return fetch(`https://api.purplewallstories.com/vote/${storyId}`, params)
+                return fetch(`https://api.purplewallstories.com/vote/${storyId}`, options)
                     .then((response) => {
                         console.log(response.json());
                     })
-            }).catch((error) => {
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
-            });
-        } else {
-            console.log("No user is logged in.");
-        }
-
+            } else {
+                console.log("No user is logged in.");
+            }
+        }).catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
+        });
     };
     voteBtn.addEventListener("click", (event) => {
         event.preventDefault();
         upVote();
+    });
+
+    getIdToken()
+        .then((idToken) => {
+                if (idToken) getRoundMap(idToken)
+                    .then((response) => {
+                        response.json().then(body => {
+                            const roundMap = body.data;
+                            if (!(storyId in roundMap.stories)) {
+                                voteColumn.style.display = "none";
+                            }
+                        });
+                    });
+                else {
+                    voteColumn.style.display = "none";
+                }
+            }
+        ).catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
     });
 </script>

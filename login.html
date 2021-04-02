@@ -5,6 +5,15 @@
                 .then((userCredential) => {
                     // Signed in
                     return getIdToken()
+                        .then((idToken) => {
+                            return getRoundMap(idToken)
+                                .then((roundMap) => console.log(`${roundMap.matchups.length} active matchups.`))
+                                .catch((error) => {
+                                    const errorCode = error.code;
+                                    const errorMessage = error.message;
+                                    console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
+                                });
+                        })
                         .finally(window.location.replace("/"))
                         .catch((error) => {
                             const errorCode = error.code;

@@ -34,7 +34,7 @@
 
     resetButton.addEventListener("click", (e) => {
         e.preventDefault();
-        if (!resetButton.disabled) createUser();
+        if (!resetButton.disabled) resetPassword();
         else {
             resetErrorMsg.innerText = "Please (re-)attempt the reCAPTCHA.";
             resetError.style.display = "block";
