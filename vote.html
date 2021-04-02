@@ -26,6 +26,8 @@
                 return fetch(`https://api.purplewallstories.com/vote/${storyId}`, options)
                     .then((response) => {
                         console.log(response.json());
+                        preVote.style.display = "none";
+                        postVote.style.display = "block";
                     })
             } else {
                 window.location.replace("/auth/login");

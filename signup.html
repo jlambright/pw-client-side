@@ -20,33 +20,22 @@
                     signupSuccess.style.display = "block";
                     // Signed in
                     const user = userCredential.user;
-                    return getIdToken()
-                        .then(() => {
-                            user.updateProfile({
-                                displayName: `${firstName.value} ${lastName.value}`
-                            }).then(()=>console.log("Display Name Updated"))
-                                .catch((error) => {
-                                    const errorCode = error.code;
-                                    const errorMessage = error.message;
-                                    console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
-                                });
-                            user.sendEmailVerification()
-                                .then(()=>console.log("Verfication Sent"))
-                                .catch(function(error) {
-                                    const errorCode = error.code;
-                                    const errorMessage = error.message;
-                                    console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
-                                });
-                        })
-                        .finally(() => {
-                            window.location.replace("/")
-                        })
+                    user.updateProfile({displayName: `${firstName.value} ${lastName.value}`})
+                        .then(()=>console.log("Display Name Updated"))
                         .catch((error) => {
                             const errorCode = error.code;
                             const errorMessage = error.message;
                             console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
                         });
-                })
+                    user.sendEmailVerification()
+                        .then(()=>console.log("Verification Sent"))
+                        .catch(function(error) {
+                            const errorCode = error.code;
+                            const errorMessage = error.message;
+                            console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
+                        });
+                    })
+                .then(() => signOut())
                 .catch((error) => {
                     const errorCode = error.code;
                     const errorMessage = error.message;
