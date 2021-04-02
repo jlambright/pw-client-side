@@ -1,0 +1,43 @@
+<script type="application/javascript">
+    const onloadResetCallback = () => {
+        resetButton.disabled = true;
+    };
+    window.onloadCallback = onloadResetCallback;
+    const enableResetBtn = () => {
+        resetButton.disabled = false;
+    }
+    window.enableBtn = enableResetBtn;
+    const resetPassword = () => {
+        const email = firebase.auth().currentUser.email;
+        const currentPw = passwordOld.value;
+        const pw = passwordNew.value;
+        const conPw = confirmPasswordNew.value;
+        const pwMatch = pw == conPw;
+        if (pwMatch) {
+            return firebase.auth().signInWithEmailAndPassword(email, currentPw)
+                .then((credentials) => firebase.auth().currentUser.reauthenticateWithCredential(credentials)
+                    .then(() => firebase.auth.currentUser.updatePassword(pw)
+                        .then(() => getIdToken())
+                            .finally(window.location.replace("/"))
+                            )).catch((error) => {
+                                const errorCode = error.code;
+                                const errorMessage = error.message;
+                                console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
+                            });
+
+        } else {
+            resetErrorMsg.innerText = "Your passwords do not match, please try again.";
+            resetError.style.display = "block";
+        }
+
+    }
+
+    resetButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (!resetButton.disabled) createUser();
+        else {
+            resetErrorMsg.innerText = "Please (re-)attempt the reCAPTCHA.";
+            resetError.style.display = "block";
+        }
+    });
+</script>

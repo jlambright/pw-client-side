@@ -1,0 +1,31 @@
+<script type="application/javascript">
+    const userSignIn = () => {
+        return firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION).then(() => {
+            return firebase.auth().signInWithEmailAndPassword(email.value, password.value)
+                .then((userCredential) => {
+                    // Signed in
+                    return getIdToken()
+                        .finally(window.location.replace("/"))
+                        .catch((error) => {
+                            const errorCode = error.code;
+                            const errorMessage = error.message;
+                            console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
+                        });
+                })
+                .catch((error) => {
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+                    console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
+                });
+        });
+    }
+    authLoginBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        userSignIn();
+    });
+    password.addEventListener("keyup", (e) => {
+        if (e.key === "Enter" || e.keyCode === 13) {
+            authLoginBtn.click();
+        }
+    });
+</script>

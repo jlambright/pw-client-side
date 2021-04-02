@@ -1,0 +1,72 @@
+<script type="application/javascript">
+    const onloadSignupCallback = () => {
+        signupButton.disabled = true;
+    };
+    window.onloadCallback = onloadSignupCallback;
+    const enableSignupBtn = () => {
+        signupButton.disabled = false;
+    }
+    window.enableBtn = enableSignupBtn;
+    const createUser = () => {
+        const pw = password.value;
+        const conPw = confirmPassword.value;
+        const pwMatch = pw == conPw;
+
+        if (pwMatch) {
+            return firebase.auth().createUserWithEmailAndPassword(email.value, password.value)
+                .then((userCredential) => {
+                    signupForm.style.display = "none";
+                    signupError.style.display = "none";
+                    signupSuccess.style.display = "block";
+                    // Signed in
+                    const user = userCredential.user;
+                    return getIdToken()
+                        .then(() => {
+                            user.updateProfile({
+                                displayName: `${firstName.value} ${lastName.value}`
+                            }).then(()=>console.log("Display Name Updated"))
+                                .catch((error) => {
+                                    const errorCode = error.code;
+                                    const errorMessage = error.message;
+                                    console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
+                                });
+                            user.sendEmailVerification()
+                                .then(()=>console.log("Verfication Sent"))
+                                .catch(function(error) {
+                                    const errorCode = error.code;
+                                    const errorMessage = error.message;
+                                    console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
+                                });
+                        })
+                        .finally(() => {
+                            window.location.replace("/")
+                        })
+                        .catch((error) => {
+                            const errorCode = error.code;
+                            const errorMessage = error.message;
+                            console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
+                        });
+                })
+                .catch((error) => {
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+                    console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
+                    signupErrorMsg.innerText = errorMessage;
+                    signupError.style.display = "block";
+                });
+        } else {
+            signupErrorMsg.innerText = "Your passwords do not match, please try again.";
+            signupError.style.display = "block";
+        }
+
+    }
+    signupButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (!signupButton.disabled) createUser();
+        else {
+            signupErrorMsg.innerText = "Please (re-)attempt the reCAPTCHA.";
+            signupError.style.display = "block";
+        }
+    });
+</script>
+<script type="application/javascript" src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
