@@ -25,10 +25,10 @@
                 }
                 return fetch(`https://api.purplewallstories.com/vote/${storyId}`, options)
                     .then((response) => {
-                        window.location.replace("/auth/login");
+                        console.log(response.json());
                     })
             } else {
-                console.log("No user is logged in.");
+                window.location.replace("/auth/login");
             }
         }).catch((error) => {
             const errorCode = error.code;
