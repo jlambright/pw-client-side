@@ -30,15 +30,20 @@
                         postVote.style.display = "block";
                     })
             } else {
-                window.location.replace("/auth/login");
+                preVote.style.display = "none";
+                cantVote.style.display = "block";
             }
         }).catch((error) => {
             const errorCode = error.code;
             const errorMessage = error.message;
+            errorVoteMsg.innerText = `{${errorCode}}: ${errorMessage}`;
+            preVote.style.display = "none";
+            errorVote.style.display = "block";
             console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
         });
     };
-    voteBtn.addEventListener("click", (event) => {
+
+    preVoteBtn.addEventListener("click", (event) => {
         event.preventDefault();
         upVote();
     });
