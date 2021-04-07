@@ -14,6 +14,9 @@
     }
     const upVote = () => {
         return getIdToken().then((idToken) => {
+            pendingVoteMsg.style.display = "block"
+            preVote.style.display = "none";
+            pendingVote.style.display = "block"
             if (idToken) {
                 const headers = new Headers();
                 headers.append("Accept", "application/json");
@@ -25,10 +28,29 @@
                 }
                 return fetch(`https://api.purplewallstories.com/vote/${storyId}`, options)
                     .then((response) => {
-                        console.log(response.json());
-                        preVote.style.display = "none";
-                        postVote.style.display = "block";
-                    })
+                        return response.json().then((body) => {
+                            console.log(body);
+                            pendingVote.style.display = "none"
+                            postVoteMsg.style.display = "block";
+                            postVote.style.display = "block";
+                        }).catch((error) => {
+                            const errorCode = error.code;
+                            const errorMessage = error.message;
+                            errorVoteMsg.innerText = `{${errorCode}}: ${errorMessage}`;
+                            errorVoteMsg.style.display = "block";
+                            pendingVote.style.display = "none";
+                            errorVote.style.display = "block";
+                            console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
+                        });
+                    }).catch((error) => {
+                        const errorCode = error.code;
+                        const errorMessage = error.message;
+                        errorVoteMsg.innerText = `{${errorCode}}: ${errorMessage}`;
+                        errorVoteMsg.style.display = "block";
+                        pendingVote.style.display = "none";
+                        errorVote.style.display = "block";
+                        console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
+                    });
             } else {
                 preVote.style.display = "none";
                 cantVote.style.display = "block";
@@ -37,7 +59,8 @@
             const errorCode = error.code;
             const errorMessage = error.message;
             errorVoteMsg.innerText = `{${errorCode}}: ${errorMessage}`;
-            preVote.style.display = "none";
+            errorVoteMsg.style.display = "block";
+            pendingVote.style.display = "none";
             errorVote.style.display = "block";
             console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
         });
@@ -52,12 +75,40 @@
         .then((idToken) => {
                 if (idToken) getRoundMap(idToken)
                     .then((response) => {
-                        response.json().then(body => {
+                        return response.json().then(body => {
                             const roundMap = body.data;
-                            if (!(storyId in roundMap.stories)) {
-                                voteColumn.style.display = "none";
+                            if (roundMap.hasOwnProperty("stories") && roundMap.hasOwnProperty("matchups")) {
+                                const stories = roundMap.stories;
+                                const matchups = roundMap.matchups;
+
+                                pendingVote.style.display = "none";
+                                if (!(storyId in stories) || (matchups[stories[storyId].matchID].voters.includes(firebase.auth().currentUser.uid))) {
+                                    if (!(storyId in roundMap.stories)) {
+                                        postVoteMsg.innerText = "vote in an active match up";
+                                    } else {
+                                        postVoteMsg.innerText = "you've already voted for this match up.";
+                                    }
+                                    postVoteMsg.style.display = "block";
+                                    postVote.style.display = "block";
+                                } else {
+                                    preVoteMsg.style.display = "block";
+                                    preVote.style.display = "block";
+                                }
+
+                            } else {
+                                errorVoteMsg.innerText = "that's embarrassing, looks like a bug";
+                                errorVoteMsg.style.display = "block";
+                                errorVote.style.display = "block";
                             }
+                        }).catch((error) => {
+                            const errorCode = error.code;
+                            const errorMessage = error.message;
+                            console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
                         });
+                    }).catch((error) => {
+                        const errorCode = error.code;
+                        const errorMessage = error.message;
+                        console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
                     });
             }
         ).catch((error) => {
