@@ -66,11 +66,6 @@
         });
     };
 
-    preVoteBtn.addEventListener("click", (event) => {
-        event.preventDefault();
-        upVote();
-    });
-
     getIdToken()
         .then((idToken) => {
                 if (idToken) getRoundMap(idToken)
@@ -86,11 +81,15 @@
                                     if (!(storyId in roundMap.stories)) {
                                         postVoteMsg.innerText = "vote in an active match up";
                                     } else {
-                                        postVoteMsg.innerText = "you've already voted for this match up.";
+                                        postVoteMsg.innerText = "you've already voted for this match up today";
                                     }
                                     postVoteMsg.style.display = "block";
                                     postVote.style.display = "block";
                                 } else {
+                                    preVoteBtn.addEventListener("click", (event) => {
+                                        event.preventDefault();
+                                        upVote();
+                                    });
                                     preVoteMsg.style.display = "block";
                                     preVote.style.display = "block";
                                 }
@@ -110,6 +109,11 @@
                         const errorMessage = error.message;
                         console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
                     });
+                else {
+                    cantVoteMsg.style.display = "block";
+                    cantVote.style.display = "block";
+                    pendingVote.style.display = "none";
+                }
             }
         ).catch((error) => {
         const errorCode = error.code;
