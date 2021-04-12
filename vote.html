@@ -79,9 +79,9 @@
                                 pendingVote.style.display = "none";
                                 if (!(storyId in stories) || (matchups[stories[storyId].matchID].voters.includes(firebase.auth().currentUser.uid))) {
                                     if (!(storyId in roundMap.stories)) {
-                                        postVoteMsg.innerText = "vote in an active match up";
+                                        postVoteMsg.innerText = "try an active match up";
                                     } else {
-                                        postVoteMsg.innerText = "you've already voted for this match up today";
+                                        postVoteMsg.innerText = "vote again tomorrow";
                                     }
                                     postVoteMsg.style.display = "block";
                                     postVote.style.display = "block";
@@ -95,7 +95,7 @@
                                 }
 
                             } else {
-                                errorVoteMsg.innerText = "that's embarrassing, looks like a bug";
+                                errorVoteMsg.innerText = "report a bug";
                                 errorVoteMsg.style.display = "block";
                                 errorVote.style.display = "block";
                             }
