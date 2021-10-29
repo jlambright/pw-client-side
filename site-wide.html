@@ -1,12 +1,7 @@
-<!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
-<script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-app.js"></script>
-
-<!-- If you enabled Analytics in your project, add the Firebase SDK for Analytics -->
-<script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-analytics.js"></script>
-
-<!-- Add Firebase products that you want to use -->
-<script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-auth.js"></script>
-<script type="application/javascript">
+<script type="module">
+    import {getApp, initializeApp} from "https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js";
+    import {getAnalytics} from "https://www.gstatic.com/firebasejs/9.0.2/firebase-analytics.js";
+    import {getAuth, onAuthStateChanged, signOut} from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.js"
     const firebaseConfig = {
         apiKey: "AIzaSyDJKlhCcgnNPS-ZywZrwxvkxY9MkEGMVIo",
         authDomain: "purple-wall.firebaseapp.com",
@@ -17,32 +12,10 @@
         measurementId: "G-LGFTFBFZ37"
     };
     // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    firebase.analytics();
-
-    const signOut = () => {
-        return firebase.auth().signOut().then((response) => {
-            console.log(response);
-            return getIdToken()
-                .finally(setTimeout(() => window.location.replace("/"), 150000))
-                .catch((error) => {
-                    const errorCode = error.code;
-                    const errorMessage = error.message;
-                    console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
-                });
-        }).catch((error) => {
-            const errorCode = error.code;
-            const errorMessage = error.message;
-            console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
-        });
-    }
-
-    window.signOut = signOut;
-
-    signOutDrop.addEventListener("click", (event) => {
-        event.preventDefault();
-        signOut();
-    });
+    initializeApp(firebaseConfig);
+    const app = getApp();
+    const analytics = getAnalytics();
+    const auth = getAuth();
 
     /**
      * Returns a promise that resolves with an ID token if available.
@@ -51,7 +24,7 @@
      */
     const getIdToken = () => {
         return new Promise((resolve, reject) => {
-            const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+            const unsubscribe = onAuthStateChanged(auth, (user) => {
                 unsubscribe();
                 if (user) {
                     user.getIdToken().then((idToken) => {
@@ -71,6 +44,28 @@
             });
         });
     };
-    window.getIdToken = getIdToken;
+
+    const signOutUser = () => {
+        return signOut(auth).then((response) => {
+            console.log(response);
+            return getIdToken()
+                .finally(setTimeout(() => window.location.replace("/"), 150000))
+                .catch((error) => {
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+                    console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
+                });
+        }).catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
+        });
+    }
+
+    signOutDrop.addEventListener("click", (event) => {
+        event.preventDefault();
+        signOutUser();
+    });
     getIdToken();
+    Object.assign(window, {app, auth, analytics, getIdToken, signOutUser});
 </script>

@@ -1,8 +1,32 @@
-<script type="application/javascript">
+<script type="application/javascript" src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit"></script>
+<script type="module">
+    import {
+        createUserWithEmailAndPassword,
+        getAuth,
+        updateProfile,
+        sendEmailVerification
+    } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.js"
+    const auth = getAuth();
+
+    const disposableEmailCheck = async (emailAddressString) => {
+        const headers = new Headers();
+        headers.append("Accept", "application/json");
+        const options = {
+            headers: headers,
+            method: "GET",
+            cache: "default"
+        }
+        return fetch(`https://open.kickbox.com/v1/disposable/${emailAddressString}`, options).then((response) => {
+            return response.json().then((body) => {
+                return body.disposable === false;
+            });
+        })
+    }
+
     const onloadSignupCallback = () => {
         signupButton.disabled = true;
     };
-    window.onloadCallback = onloadSignupCallback;
+    Object.assign(window, {onloadCallback: onloadSignupCallback});
     const enableSignupBtn = () => {
         signupButton.disabled = false;
     }
@@ -13,29 +37,28 @@
         const pwMatch = pw == conPw;
 
         if (pwMatch) {
-            return firebase.auth().createUserWithEmailAndPassword(email.value, password.value)
+            return createUserWithEmailAndPassword(auth, email.value, password.value)
                 .then((userCredential) => {
                     signupForm.style.display = "none";
                     signupError.style.display = "none";
                     signupSuccess.style.display = "block";
                     // Signed in
-                    const user = userCredential.user;
-                    user.updateProfile({displayName: `${firstName.value} ${lastName.value}`})
+                    updateProfile(auth.currentUser, {displayName: `${firstName.value} ${lastName.value}`})
                         .then(()=>console.log("Display Name Updated"))
                         .catch((error) => {
                             const errorCode = error.code;
                             const errorMessage = error.message;
                             console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
                         });
-                    user.sendEmailVerification()
+                    sendEmailVerification(auth.currentUser)
                         .then(()=>console.log("Verification Sent"))
                         .catch(function(error) {
                             const errorCode = error.code;
                             const errorMessage = error.message;
                             console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
                         });
-                    })
-                .then(() => signOut())
+                })
+                .then(() => signOutUser())
                 .catch((error) => {
                     const errorCode = error.code;
                     const errorMessage = error.message;
@@ -49,13 +72,19 @@
         }
 
     }
-    signupButton.addEventListener("click", (e) => {
+    signupButton.addEventListener("click", async (e) => {
         e.preventDefault();
-        if (!signupButton.disabled) createUser();
-        else {
+        if (!signupButton.disabled) {
+            const emailTestResults = await disposableEmailCheck(email.value);
+            if (emailTestResults) {
+                createUser();
+            } else {
+                signupErrorMsg.innerText = "Please Use A Different Email:\nDisposable emails are not allowed.";
+                signupError.style.display = "block";
+            }
+        } else {
             signupErrorMsg.innerText = "Please (re-)attempt the reCAPTCHA.";
             signupError.style.display = "block";
         }
     });
 </script>
-<script type="application/javascript" src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>

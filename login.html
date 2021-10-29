@@ -1,32 +1,48 @@
-<script type="application/javascript">
-    const userSignIn = () => {
-        return firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION).then(() => {
-            return firebase.auth().signInWithEmailAndPassword(email.value, password.value)
-                .then((userCredential) => {
-                    // Signed in
-                    return getIdToken()
-                        .then((idToken) => {
-                            return getRoundMap(idToken)
-                                .then((roundMap) => console.log(`${roundMap.matchups.length} active matchups.`))
-                                .catch((error) => {
-                                    const errorCode = error.code;
-                                    const errorMessage = error.message;
-                                    console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
-                                });
-                        })
-                        .finally(window.location.replace("/"))
-                        .catch((error) => {
-                            const errorCode = error.code;
-                            const errorMessage = error.message;
-                            console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
-                        });
-                })
-                .catch((error) => {
-                    const errorCode = error.code;
-                    const errorMessage = error.message;
-                    console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
-                });
-        });
+<script type="module">
+    import {
+        browserSessionPersistence,
+        getAuth,
+        sendSignInLinkToEmail,
+        setPersistence,
+        signInWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.js"
+    const auth = getAuth();
+
+    const href = document.referrer.includes("/stories")? document.referrer : document.location.origin.href;
+
+/*    const sendEmailLink = async (email) => {
+        const actionCodeSettings = {
+            url: href,
+            handleCodeInApp: false,
+        };
+        try {
+            await sendSignInLinkToEmail(
+                auth,
+                email,
+                actionCodeSettings
+            );
+            window.localStorage.setItem('emailForSignIn', email);
+            console.log("Auth link sent.");
+        } catch (error) {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
+        }
+    }*/
+
+    const userSignIn = async () => {
+        try {
+            await setPersistence(auth, browserSessionPersistence);
+            await signInWithEmailAndPassword(auth, email.value, password.value);
+            window.location.replace(href);
+        } catch (error) {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            authLoginErrorTxt.innerText = `${errorMessage}`;
+            authLoginErrorTxt.style.display = "block";
+            authLoginError.style.display = "block";
+            console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
+        }
     }
     authLoginBtn.addEventListener("click", (event) => {
         event.preventDefault();
@@ -37,4 +53,5 @@
             authLoginBtn.click();
         }
     });
+    // Object.assign(window, {sendEmailLink});
 </script>
