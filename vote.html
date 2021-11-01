@@ -1,9 +1,10 @@
 <script type="module">
     import {getAuth} from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.js"
     const auth = getAuth();
-    const user = auth.currentUser;
     // This nonsense string is produced by the WebFlow variable templating.
     const storyId = "{{wf {&quot;path&quot;:&quot;story-id&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}";
+    const emailVotingFlag = true;
+    let user = null;
 
     let headers = new Headers();
     headers.set("Accept", "application/json");
@@ -11,14 +12,15 @@
     const getVoteStatus = async (idToken) => {
         try {
             headers.set("Authorization", `Bearer ${idToken}`);
-
             const options = {
                 headers: headers,
                 method: "GET",
                 cache: "default",
+                referrerPolicy: "origin",
+                mode: "cors",
                 username: user.email,
             }
-            const response = await fetch(`https://api.purplewallstories.com/vote/${storyId}`, options);
+            const response = await fetch(`https://api.purplewallstories.com/v1/stories/${storyId}/votes`, options);
             return await response.json();
         } catch (e) {
             console.log(`[Error when fetching vote status]`);
@@ -36,10 +38,12 @@
             if (idToken) {
                 const options = {
                     headers: headers,
-                    method: "POST"
+                    method: "POST",
+                    referrerPolicy: "origin",
+                    mode: "cors",
                     username: user.email,
                 }
-                const response = await fetch(`https://api.purplewallstories.com/vote/${storyId}`, options);
+                const response = await fetch(`https://api.purplewallstories.com/v1/stories/${storyId}/votes`, options);
                 const body = await response.json();
                 console.log(body.data);
                 pendingVote.style.display = "none"
@@ -49,6 +53,7 @@
                 preVote.style.display = "none";
                 cantVote.style.display = "block";
             }
+
         } catch (error) {
             const errorCode = error.code;
             const errorMessage = error.message;
@@ -62,33 +67,40 @@
 
     getIdToken().then(async (idToken) => {
         try {
-            if (manualVote.style.display !== "") {
-                cantVote.style.display = "none";
-            } else if (idToken) {
-                const voteStatusResponse = await getVoteStatus(idToken);
-                const {inRound, hasVoted} = voteStatusResponse.data;
-                pendingVote.style.display = "none";
-                if (!inRound) {
-                    postVoteMsg.innerText = "try an active match up";
-                    postVoteMsg.style.display = "block";
-                    postVote.style.display = "block";
-                } else if (hasVoted) {
-                    postVoteMsg.innerText = "vote again tomorrow";
-                    postVoteMsg.style.display = "block";
-                    postVote.style.display = "block";
-                } else if (!hasVoted && inRound) {
-                    preVoteBtn.addEventListener("click", async (event) => {
-                        event.preventDefault();
-                        const voteResponse = await upVote();
-                        console.log(voteResponse);
-                    });
-                    preVoteMsg.style.display = "block";
-                    preVote.style.display = "block";
+            if (idToken) {
+                if (emailVotingFlag) {
+                    mailInVoteMsg.style.display = "block";
+                    mailInVote.style.display = "block";
+                    pendingVote.style.display = "none";
+                    cantVote.style.display = "none";
                 } else {
-                    errorVoteMsg.innerText = "report a bug";
-                    errorVoteMsg.style.display = "block";
-                    errorVote.style.display = "block";
+                    user = auth.currentUser;
+                    const voteStatusResponse = await getVoteStatus(idToken);
+                    const {inRound, hasVoted} = voteStatusResponse.data;
+                    pendingVote.style.display = "none";
+                    if (!inRound) {
+                        postVoteMsg.innerText = "try an active match up";
+                        postVoteMsg.style.display = "block";
+                        postVote.style.display = "block";
+                    } else if (hasVoted) {
+                        postVoteMsg.innerText = "vote again tomorrow";
+                        postVoteMsg.style.display = "block";
+                        postVote.style.display = "block";
+                    } else if (!hasVoted && inRound) {
+                        preVoteBtn.addEventListener("click", async (event) => {
+                            event.preventDefault();
+                            const voteResponse = await upVote();
+                            console.log(voteResponse);
+                        });
+                        preVoteMsg.style.display = "block";
+                        preVote.style.display = "block";
+                    } else {
+                        errorVoteMsg.innerText = "report a bug";
+                        errorVoteMsg.style.display = "block";
+                        errorVote.style.display = "block";
+                    }
                 }
+
             } else {
                 cantVoteMsg.style.display = "block";
                 cantVote.style.display = "block";

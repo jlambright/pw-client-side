@@ -8,8 +8,6 @@
     } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.js"
     const auth = getAuth();
 
-    const href = document.referrer.includes("/stories")? document.referrer : document.location.origin.href;
-
 /*    const sendEmailLink = async (email) => {
         const actionCodeSettings = {
             url: href,
@@ -34,7 +32,7 @@
         try {
             await setPersistence(auth, browserSessionPersistence);
             await signInWithEmailAndPassword(auth, email.value, password.value);
-            window.location.replace(href);
+            window.location.replace(getHref());
         } catch (error) {
             const errorCode = error.code;
             const errorMessage = error.message;

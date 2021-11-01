@@ -17,6 +17,14 @@
     const analytics = getAnalytics();
     const auth = getAuth();
 
+    const logLevels = Object.freeze({
+        OTHER: 0,
+        DEBUG: 1,
+        INFO: 2,
+        WARN: 3,
+        ERROR: 4
+    });
+
     /**
      * Returns a promise that resolves with an ID token if available.
      * @return {!Promise<?string>} The promise that resolves with an ID token if
@@ -45,21 +53,63 @@
         });
     };
 
-    const signOutUser = () => {
-        return signOut(auth).then((response) => {
-            console.log(response);
-            return getIdToken()
-                .finally(setTimeout(() => window.location.replace("/"), 150000))
-                .catch((error) => {
-                    const errorCode = error.code;
-                    const errorMessage = error.message;
-                    console.log(`Error Code: ${errorCode}\nError Msg: ${errorMessage}`);
-                });
-        }).catch((error) => {
+    /**
+     *
+     * @param {"OTHER"|"DEBUG"|"INFO"|"WARN"|"ERROR"}level
+     * @param {string} message
+     * @param {object} data
+     * @return {Promise<any>}
+     */
+    const submitLog = async (level, message, data) => {
+        let headers = new Headers();
+        headers.set("Accept", "application/json");
+
+        try {
+            if (level) {
+                level = level.toUpperCase();
+                if (logLevels.hasOwnProperty(level)){
+                    data.level = level;
+                    data.code = logLevels[level];
+                }   else {
+                    data.level = "OTHER";
+                    data.code = logLevels.OTHER;
+                }
+
+                const options = {
+                    headers: headers,
+                    method: "POST",
+                    cache: "default",
+                    referrerPolicy: "origin-when-cross-origin",
+                    body: data,
+                }
+                const response = await fetch(`https://api.purplewallstories.com/v1/logs`, options);
+                return await response.json();
+            } else {
+                throw new TypeError("submitLog() -> Parameter \"level\" must be defined.")
+            }
+
+        } catch (error) {
             const errorCode = error.code;
             const errorMessage = error.message;
             console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
-        });
+        }
+
+    }
+
+    const getHref = () => {
+        return document.referrer.includes(origin) ? document.referrer : origin;
+    }
+
+    const signOutUser = async () => {
+        try {
+            await signOut(auth);
+            await  getIdToken();
+            setTimeout(window.location.replace("/"), 1500);
+        } catch (error) {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.log(`Error Code: ${errorCode} \n Error Msg: ${errorMessage}`);
+        }
     }
 
     signOutDrop.addEventListener("click", (event) => {
@@ -67,5 +117,5 @@
         signOutUser();
     });
     getIdToken();
-    Object.assign(window, {app, auth, analytics, getIdToken, signOutUser});
+    Object.assign(window, {app, auth, analytics, getHref, getIdToken, signOutUser, logLevels, submitLog});
 </script>
